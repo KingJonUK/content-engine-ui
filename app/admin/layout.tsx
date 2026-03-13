@@ -18,15 +18,14 @@ import {
 import clsx from "clsx";
 
 const nav = [
-  { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/clients", label: "Clients", icon: Users },
-  { href: "/admin/campaigns", label: "Campaigns", icon: Megaphone },
-  { href: "/admin/content", label: "Content", icon: FileText },
-  { href: "/admin/agents", label: "Agents", icon: Bot },
-  { href: "/admin/pipeline", label: "Pipeline", icon: GitBranch },
-  { href: "/admin/pipeline", label: "Pipeline", icon: GitBranch },
-  { href: "/admin/chat", label: "AI Chat", icon: MessageSquare },
-  { href: "/admin/settings", label: "Settings", icon: Settings },
+  { href: "/admin/dashboard",  label: "Dashboard",     icon: LayoutDashboard },
+  { href: "/admin/clients",    label: "Clients",        icon: Users },
+  { href: "/admin/campaigns",  label: "Campaigns",      icon: Megaphone },
+  { href: "/admin/content",    label: "Content",        icon: FileText },
+  { href: "/admin/pipeline",   label: "Pipeline",       icon: GitBranch },
+  { href: "/admin/agents",     label: "Agent Runner",   icon: Bot },
+  { href: "/admin/chat",       label: "AI Chat",        icon: MessageSquare },
+  { href: "/admin/settings",   label: "Settings",       icon: Settings },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
