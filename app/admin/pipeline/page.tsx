@@ -38,6 +38,8 @@ const AGENT_LABELS: Record<string, string> = {
   qa:                 "QA / Editor",
   creative_direction: "Creative Direction",
   repurpose:          "Repurpose",
+  image_generation:   "Image Generation",
+  video_generation:   "Video Generation",
 };
 
 const AGENT_DESCRIPTIONS: Record<string, string> = {
