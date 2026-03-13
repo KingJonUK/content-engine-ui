@@ -173,6 +173,12 @@ export interface BrandProfile {
   proofPoints: string | null;
   contentPillars: string | null;
   platforms: string | null;
+  primaryColor: string | null;
+  secondaryColor: string | null;
+  accentColor: string | null;
+  fontPrimary: string | null;
+  fontSecondary: string | null;
+  brandLogoUrl: string | null;
   createdAt: string;
   updatedAt: string;
 }
