@@ -276,15 +276,15 @@ export interface Message {
 }
 
 export const AGENT_TYPES = [
-  "content_strategist",
+  "strategy",
+  "research",
+  "angle",
+  "hook",
   "copywriter",
-  "seo_optimizer",
-  "social_media_manager",
-  "email_marketer",
-  "brand_voice_coach",
-  "content_repurposer",
-  "analytics_interpreter",
-  "campaign_planner",
+  "cta",
+  "qa",
+  "creative_direction",
+  "repurpose",
 ] as const;
 
 export const CONTENT_STATUSES = ["idea", "brief", "draft", "review", "approved", "published"] as const;
