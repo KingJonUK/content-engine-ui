@@ -285,6 +285,8 @@ export const AGENT_TYPES = [
   "qa",
   "creative_direction",
   "repurpose",
+  "image_generation",
+  "video_generation",
 ] as const;
 
 export const CONTENT_STATUSES = ["idea", "brief", "draft", "review", "approved", "published"] as const;
@@ -321,6 +323,50 @@ export interface PipelineStageEvent {
   output?: string;
   error?: string;
 }
+
+
+// ─── Media Providers ─────────────────────────────────────────────────────────
+export type MediaType = "image" | "video";
+export type ImageProviderType = "openai" | "replicate" | "stability" | "openrouter";
+export type VideoProviderType = "runway" | "kling" | "luma" | "openai" | "openrouter";
+
+export interface MediaProvider {
+  id: number;
+  name: string;
+  mediaType: MediaType;
+  providerType: string;
+  apiKey: string;
+  baseUrl?: string;
+  defaultModel: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const IMAGE_PROVIDERS: { value: ImageProviderType; label: string; defaultModel: string; baseUrl?: string }[] = [
+  { value: "openai",     label: "OpenAI DALL-E",              defaultModel: "dall-e-3" },
+  { value: "replicate",  label: "Replicate (Flux)",           defaultModel: "black-forest-labs/flux-1.1-pro" },
+  { value: "stability",  label: "Stability AI",               defaultModel: "stable-image-core" },
+  { value: "openrouter", label: "OpenRouter (Ideogram/Recraft)", defaultModel: "ideogram-ai/ideogram-v2" },
+];
+
+export const VIDEO_PROVIDERS: { value: VideoProviderType; label: string; defaultModel: string }[] = [
+  { value: "runway",     label: "Runway",                     defaultModel: "gen4_turbo" },
+  { value: "kling",      label: "Kling AI",                   defaultModel: "kling-v2-master" },
+  { value: "luma",       label: "Luma Dream Machine",         defaultModel: "ray-2" },
+  { value: "openai",     label: "Sora (OpenAI)",              defaultModel: "sora" },
+  { value: "openrouter", label: "Minimax via OpenRouter",     defaultModel: "minimax/video-01" },
+];
+
+export const getMediaProviders = () => request<MediaProvider[]>("/media-providers");
+export const createMediaProvider = (data: Omit<MediaProvider, "id" | "createdAt" | "updatedAt">) =>
+  request<MediaProvider>("/media-providers", { method: "POST", body: JSON.stringify(data) });
+export const updateMediaProvider = (id: number, data: Partial<MediaProvider>) =>
+  request<MediaProvider>(`/media-providers/${id}`, { method: "PATCH", body: JSON.stringify(data) });
+export const deleteMediaProvider = (id: number) =>
+  fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/media-providers/${id}`, { method: "DELETE" });
+export const testMediaProvider = (id: number) =>
+  request<{ success: boolean; message: string }>(`/media-providers/${id}/test`, { method: "POST" });
 
 export function runPipelineStream(
   payload: { clientId: number; outputType: string; brief?: string },
