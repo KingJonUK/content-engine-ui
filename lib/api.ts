@@ -310,6 +310,31 @@ export const OUTPUT_TYPES = [
   { key: "social_video",         label: "Social Video",           agents: ["angle","hook","copywriter","video_generation"],                                        color: "#EF4444", emoji: "🎥" },
 ];
 
+// ─── Media Providers ─────────────────────────────────────────────────────────
+export type MediaType = "image" | "video";
+export type ImageProviderType = "openai" | "replicate" | "stability" | "openrouter";
+export type VideoProviderType = "runway" | "kling" | "luma" | "openai" | "openrouter";
+
+export interface MediaProvider {
+  id: number;
+  name: string;
+  mediaType: MediaType;
+  providerType: string;
+  apiKey: string;
+  baseUrl?: string;
+  defaultModel: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const IMAGE_PROVIDERS: { value: ImageProviderType; label: string; defaultModel: string }[] = [
+  { value: "openai",     label: "OpenAI DALL-E",                  defaultModel: "dall-e-3" },
+  { value: "replicate",  label: "Replicate (Flux)",               defaultModel: "black-forest-labs/flux-1.1-pro" },
+  { value: "stability",  label: "Stability AI",                   defaultModel: "stable-image-core" },
+  { value: "openrouter", label: "OpenRouter (Ideogram/Recraft)",  defaultModel: "ideogram-ai/ideogram-v2" },
+];
+
 export const VIDEO_PROVIDERS: { value: VideoProviderType; label: string; defaultModel: string }[] = [
   { value: "runway",     label: "Runway",                     defaultModel: "gen4_turbo" },
   { value: "kling",      label: "Kling AI",                   defaultModel: "kling-v2-master" },
