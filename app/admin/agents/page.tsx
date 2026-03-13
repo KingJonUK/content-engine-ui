@@ -8,6 +8,7 @@ import {
   type Client,
   type AgentRun,
   AGENT_TYPES,
+  AGENT_LABELS,
 } from "@/lib/api";
 import { Button, FormField, PageHeader, Select, Badge, useToast } from "@/components/ui";
 import { Bot, Play, ClipboardList, Loader2, ChevronDown, ChevronUp } from "lucide-react";
@@ -92,7 +93,7 @@ export default function AgentsPage() {
                 onChange={(e) => setAgentType(e.target.value as typeof agentType)}
                 options={AGENT_TYPES.map((a) => ({
                   value: a,
-                  label: a.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase()),
+                  label: AGENT_LABELS[a] ?? a.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase()),
                 }))}
               />
             </FormField>
