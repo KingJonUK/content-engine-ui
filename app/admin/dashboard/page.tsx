@@ -69,6 +69,9 @@ function Skeleton({ className }: { className?: string }) {
   return <div className={`shimmer rounded-lg ${className ?? ""}`} />;
 }
 
+
+const OUTPUT_TYPE_LABEL = Object.fromEntries(OUTPUT_TYPES.map((t) => [t.key, `${t.emoji} ${t.label}`]));
+
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -172,7 +175,7 @@ export default function DashboardPage() {
                         {c.title}
                       </p>
                       <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
-                        {c.platform} · {c.contentType}
+                        {OUTPUT_TYPE_LABEL[c.contentType] ?? c.platform}
                       </p>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
