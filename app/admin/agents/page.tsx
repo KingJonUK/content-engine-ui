@@ -63,8 +63,8 @@ export default function AgentsPage() {
   return (
     <div className="p-8 max-w-7xl mx-auto animate-fade-up">
       <PageHeader
-        title="AI Agents"
-        subtitle="Run content generation agents and view run history"
+        title="Agent Runner"
+        subtitle="Test individual agents and inspect run history for debugging"
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
