@@ -12,9 +12,17 @@ import {
   type AIProvider,
   type AgentDefault,
   AGENT_TYPES,
+  getMediaProviders,
+  createMediaProvider,
+  updateMediaProvider,
+  deleteMediaProvider,
+  testMediaProvider,
+  IMAGE_PROVIDERS,
+  VIDEO_PROVIDERS,
+  type MediaProvider,
 } from "@/lib/api";
 import { Button, Modal, FormField, Select, ConfirmModal, Badge, useToast } from "@/components/ui";
-import { Settings, Plus, Pencil, Trash2, Zap, Bot, CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import { Settings, Plus, Pencil, Trash2, Zap, Bot, CheckCircle2, XCircle, Loader2, Image, Video } from "lucide-react";
 
 
 const AGENT_LABELS: Record<string, { label: string; emoji: string; description: string }> = {
@@ -27,6 +35,8 @@ const AGENT_LABELS: Record<string, { label: string; emoji: string; description: 
   qa:                 { emoji: "✅", label: "QA / Editor",        description: "Quality assurance & editing" },
   creative_direction: { emoji: "🎨", label: "Creative Direction", description: "Visual & carousel structure" },
   repurpose:          { emoji: "♻️",  label: "Repurposer",        description: "Repurpose content across formats" },
+  image_generation:   { emoji: "🖼️",  label: "Image Generation",  description: "Generate on-brand visuals" },
+  video_generation:   { emoji: "🎬",  label: "Video Generation",  description: "Generate short-form video" },
 };
 
 const EMPTY_PROVIDER = { name: "", providerType: "openai", apiKey: "", baseUrl: "", defaultModel: "" };
@@ -44,10 +54,19 @@ export default function SettingsPage() {
   const [deleting, setDeleting] = useState(false);
   const [agentForms, setAgentForms] = useState<Record<string, { providerId: string; model: string }>>({});
   const [savingAgent, setSavingAgent] = useState<string | null>(null);
+  const [mediaProviders, setMediaProviders] = useState<MediaProvider[]>([]);
+  const [mediaModalOpen, setMediaModalOpen] = useState(false);
+  const [editMediaProvider, setEditMediaProvider] = useState<MediaProvider | null>(null);
+  const [mediaForm, setMediaForm] = useState({ name: "", mediaType: "image" as "image"|"video", providerType: "openai", apiKey: "", defaultModel: "", baseUrl: "" });
+  const [savingMedia, setSavingMedia] = useState(false);
+  const [deleteMediaTarget, setDeleteMediaTarget] = useState<MediaProvider | null>(null);
+  const [deletingMedia, setDeletingMedia] = useState(false);
+  const [mediaTestResults, setMediaTestResults] = useState<Record<number, { success: boolean; message: string } | "loading">>({});
   const { show, ToastEl } = useToast();
 
   const load = async () => {
-    const [p, d] = await Promise.all([getProviders(), getAgentDefaults()]);
+    const [p, d, mp] = await Promise.all([getProviders(), getAgentDefaults(), getMediaProviders()]);
+    setMediaProviders(mp);
     setProviders(p);
     setDefaults(d);
     const forms: Record<string, { providerId: string; model: string }> = {};
@@ -123,6 +142,49 @@ export default function SettingsPage() {
     } finally {
       setSavingAgent(null);
     }
+  };
+
+
+  const openCreateMedia = (type: "image" | "video") => {
+    setEditMediaProvider(null);
+    const defaultProv = type === "image" ? "openai" : "runway";
+    const defaultModel = type === "image" ? "dall-e-3" : "gen4_turbo";
+    setMediaForm({ name: "", mediaType: type, providerType: defaultProv, apiKey: "", defaultModel, baseUrl: "" });
+    setMediaModalOpen(true);
+  };
+  const openEditMedia = (mp: MediaProvider) => {
+    setEditMediaProvider(mp);
+    setMediaForm({ name: mp.name, mediaType: mp.mediaType as "image"|"video", providerType: mp.providerType, apiKey: "", defaultModel: mp.defaultModel, baseUrl: mp.baseUrl ?? "" });
+    setMediaModalOpen(true);
+  };
+  const handleSaveMedia = async () => {
+    setSavingMedia(true);
+    try {
+      if (editMediaProvider) {
+        const payload: any = { name: mediaForm.name, mediaType: mediaForm.mediaType, providerType: mediaForm.providerType, defaultModel: mediaForm.defaultModel, baseUrl: mediaForm.baseUrl };
+        if (mediaForm.apiKey) payload.apiKey = mediaForm.apiKey;
+        await updateMediaProvider(editMediaProvider.id, payload);
+        show("Media provider updated");
+      } else {
+        await createMediaProvider({ ...mediaForm, isActive: true });
+        show("Media provider added");
+      }
+      setMediaModalOpen(false);
+      load();
+    } catch (e: any) { show(e.message, "error"); }
+    finally { setSavingMedia(false); }
+  };
+  const handleDeleteMedia = async () => {
+    if (!deleteMediaTarget) return;
+    setDeletingMedia(true);
+    try { await deleteMediaProvider(deleteMediaTarget.id); show("Deleted"); load(); setDeleteMediaTarget(null); }
+    catch (e: any) { show(e.message, "error"); }
+    finally { setDeletingMedia(false); }
+  };
+  const handleTestMedia = async (id: number) => {
+    setMediaTestResults(prev => ({ ...prev, [id]: "loading" }));
+    try { const r = await testMediaProvider(id); setMediaTestResults(prev => ({ ...prev, [id]: r })); }
+    catch (e: any) { setMediaTestResults(prev => ({ ...prev, [id]: { success: false, message: e.message } })); }
   };
 
   return (
@@ -314,6 +376,138 @@ export default function SettingsPage() {
         title="Delete Provider"
         description={`Delete "${deleteTarget?.name}"? Any agents using this provider will lose their configuration.`}
       />
+
+
+        {/* ── Image Providers ───────────────────────────────────────── */}
+        <div className="rounded-2xl p-6" style={{ background: "var(--surface-raised)", border: "1px solid var(--border)" }}>
+          <div className="flex items-center justify-between mb-5">
+            <div>
+              <h2 className="text-base font-semibold flex items-center gap-2" style={{ color: "var(--text-primary)" }}>
+                <Image size={16} style={{ color: "var(--accent)" }} /> Image Providers
+              </h2>
+              <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>Connect image generation APIs for visual content</p>
+            </div>
+            <Button size="sm" icon={<Plus size={14} />} onClick={() => openCreateMedia("image")}>Add Image Provider</Button>
+          </div>
+          {mediaProviders.filter(p => p.mediaType === "image").length === 0 ? (
+            <p className="text-sm text-center py-6" style={{ color: "var(--text-muted)" }}>No image providers yet. Add DALL-E, Flux, Stability AI or Ideogram.</p>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {mediaProviders.filter(p => p.mediaType === "image").map((p) => {
+                const tr = mediaTestResults[p.id];
+                return (
+                  <div key={p.id} className="flex items-center justify-between p-3 rounded-xl" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
+                    <div>
+                      <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>{p.name}</p>
+                      <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>{p.providerType} · {p.defaultModel}</p>
+                      {tr && tr !== "loading" && (
+                        <p className="text-xs mt-0.5 flex items-center gap-1" style={{ color: tr.success ? "var(--jade)" : "var(--ember)" }}>
+                          {tr.success ? <CheckCircle2 size={11} /> : <XCircle size={11} />} {tr.message}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <button onClick={() => handleTestMedia(p.id)} className="p-1.5 rounded-lg" style={{ color: "var(--text-muted)" }} title="Test">
+                        {tr === "loading" ? <Loader2 size={13} className="animate-spin" /> : <Zap size={13} />}
+                      </button>
+                      <button onClick={() => openEditMedia(p)} className="p-1.5 rounded-lg" style={{ color: "var(--text-muted)" }}><Pencil size={13} /></button>
+                      <button onClick={() => setDeleteMediaTarget(p)} className="p-1.5 rounded-lg" style={{ color: "var(--text-muted)" }}><Trash2 size={13} /></button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* ── Video Providers ───────────────────────────────────────── */}
+        <div className="rounded-2xl p-6" style={{ background: "var(--surface-raised)", border: "1px solid var(--border)" }}>
+          <div className="flex items-center justify-between mb-5">
+            <div>
+              <h2 className="text-base font-semibold flex items-center gap-2" style={{ color: "var(--text-primary)" }}>
+                <Video size={16} style={{ color: "var(--accent)" }} /> Video Providers
+              </h2>
+              <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>Connect video generation APIs for short-form video</p>
+            </div>
+            <Button size="sm" icon={<Plus size={14} />} onClick={() => openCreateMedia("video")}>Add Video Provider</Button>
+          </div>
+          {mediaProviders.filter(p => p.mediaType === "video").length === 0 ? (
+            <p className="text-sm text-center py-6" style={{ color: "var(--text-muted)" }}>No video providers yet. Add Runway, Kling, Luma, Sora or Minimax.</p>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {mediaProviders.filter(p => p.mediaType === "video").map((p) => {
+                const tr = mediaTestResults[p.id];
+                return (
+                  <div key={p.id} className="flex items-center justify-between p-3 rounded-xl" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
+                    <div>
+                      <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>{p.name}</p>
+                      <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>{p.providerType} · {p.defaultModel}</p>
+                      {tr && tr !== "loading" && (
+                        <p className="text-xs mt-0.5 flex items-center gap-1" style={{ color: tr.success ? "var(--jade)" : "var(--ember)" }}>
+                          {tr.success ? <CheckCircle2 size={11} /> : <XCircle size={11} />} {tr.message}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <button onClick={() => handleTestMedia(p.id)} className="p-1.5 rounded-lg" style={{ color: "var(--text-muted)" }} title="Test">
+                        {tr === "loading" ? <Loader2 size={13} className="animate-spin" /> : <Zap size={13} />}
+                      </button>
+                      <button onClick={() => openEditMedia(p)} className="p-1.5 rounded-lg" style={{ color: "var(--text-muted)" }}><Pencil size={13} /></button>
+                      <button onClick={() => setDeleteMediaTarget(p)} className="p-1.5 rounded-lg" style={{ color: "var(--text-muted)" }}><Trash2 size={13} /></button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* ── Media Provider Modal ──────────────────────────────────── */}
+        <Modal
+          open={mediaModalOpen}
+          onClose={() => setMediaModalOpen(false)}
+          title={editMediaProvider ? "Edit Media Provider" : `Add ${mediaForm.mediaType === "image" ? "Image" : "Video"} Provider`}
+          footer={<><Button variant="ghost" onClick={() => setMediaModalOpen(false)}>Cancel</Button><Button onClick={handleSaveMedia} loading={savingMedia}>{editMediaProvider ? "Save Changes" : "Add Provider"}</Button></>}
+        >
+          <div className="flex flex-col gap-3">
+            <FormField label="Provider Name" required>
+              <input value={mediaForm.name} onChange={(e) => setMediaForm({ ...mediaForm, name: e.target.value })} placeholder={mediaForm.mediaType === "image" ? "e.g. DALL-E 3" : "e.g. Runway Gen-4"} />
+            </FormField>
+            <FormField label="Provider Type" required>
+              <Select
+                value={mediaForm.providerType}
+                onChange={(e) => {
+                  const pt = e.target.value;
+                  const list = mediaForm.mediaType === "image" ? IMAGE_PROVIDERS : VIDEO_PROVIDERS;
+                  const match = list.find(p => p.value === pt);
+                  setMediaForm({ ...mediaForm, providerType: pt, defaultModel: match?.defaultModel ?? "" });
+                }}
+                options={
+                  (mediaForm.mediaType === "image" ? IMAGE_PROVIDERS : VIDEO_PROVIDERS)
+                    .map(p => ({ value: p.value, label: p.label }))
+                }
+              />
+            </FormField>
+            <FormField label="API Key" required>
+              <input type="password" value={mediaForm.apiKey} onChange={(e) => setMediaForm({ ...mediaForm, apiKey: e.target.value })} placeholder={editMediaProvider ? "Leave blank to keep existing key" : "Your API key"} />
+            </FormField>
+            <FormField label="Default Model" required>
+              <input value={mediaForm.defaultModel} onChange={(e) => setMediaForm({ ...mediaForm, defaultModel: e.target.value })} placeholder="e.g. dall-e-3" />
+            </FormField>
+            <FormField label="Base URL" hint="Only needed for self-hosted or proxy endpoints">
+              <input value={mediaForm.baseUrl} onChange={(e) => setMediaForm({ ...mediaForm, baseUrl: e.target.value })} placeholder="https://..." />
+            </FormField>
+          </div>
+        </Modal>
+
+        <ConfirmModal
+          open={!!deleteMediaTarget}
+          onClose={() => setDeleteMediaTarget(null)}
+          onConfirm={handleDeleteMedia}
+          loading={deletingMedia}
+          title="Delete Media Provider"
+          description={`Delete "${deleteMediaTarget?.name}"?`}
+        />
 
       {ToastEl}
     </div>
