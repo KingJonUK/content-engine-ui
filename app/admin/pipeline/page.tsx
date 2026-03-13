@@ -12,7 +12,7 @@ import { Button, FormField, PageHeader, Select, useToast } from "@/components/ui
 import {
   Play, Square, Copy, Check, ChevronDown, ChevronUp,
   GitBranch, Loader2, CheckCircle2, XCircle, Clock,
-  Zap, FileText, RotateCcw, Info,
+  Zap, FileText, RotateCcw, Info, BookOpen, ArrowRight,
 } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -196,6 +196,173 @@ function CopyButton({ text }: { text: string }) {
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
+
+// ── Agent detail data ─────────────────────────────────────────────────────────
+const AGENT_INFO: Record<string, { emoji: string; label: string; role: string; color: string }> = {
+  strategy:           { emoji: "🧠", label: "Strategy",           role: "Plans the content angle, audience targeting and messaging framework",    color: "#6366F1" },
+  research:           { emoji: "🔍", label: "Research",           role: "Gathers relevant insights, trends and supporting evidence",               color: "#0EA5E9" },
+  angle:              { emoji: "🎯", label: "Angle",              role: "Defines the unique creative angle and directional hook for the piece",    color: "#F59E0B" },
+  hook:               { emoji: "⚡", label: "Hook Writer",        role: "Crafts attention-grabbing opening lines designed to stop the scroll",     color: "#EF4444" },
+  copywriter:         { emoji: "✍️", label: "Copywriter",         role: "Writes the core body content in full brand voice and platform style",    color: "#10B981" },
+  cta:                { emoji: "📣", label: "CTA Writer",         role: "Creates compelling calls to action that drive clicks and engagement",     color: "#8B5CF6" },
+  qa:                 { emoji: "✅", label: "QA / Editor",        role: "Proofreads, refines tone and ensures quality before final output",        color: "#14B8A6" },
+  creative_direction: { emoji: "🎨", label: "Creative Direction", role: "Structures visual carousels, slide layouts and creative briefs",          color: "#EC4899" },
+  repurpose:          { emoji: "♻️", label: "Repurposer",         role: "Adapts and remixes content for multiple platforms and formats",           color: "#84CC16" },
+  image_generation:   { emoji: "🖼️", label: "Image Generation",  role: "Prompts and generates on-brand visuals using AI image models",           color: "#F97316" },
+  video_generation:   { emoji: "🎬", label: "Video Generation",   role: "Writes video scripts and produces AI-generated short-form clips",         color: "#E11D48" },
+};
+
+const OUTPUT_TYPE_DESCRIPTIONS: Record<string, string> = {
+  linkedin_post:        "A professional long-form LinkedIn post — researched, angled and polished end-to-end.",
+  linkedin_post_visual: "Like LinkedIn Post, but adds an AI-generated on-brand image ready to attach.",
+  twitter_thread:       "A punchy multi-tweet thread — hooked, structured and QA'd for X/Twitter.",
+  instagram_carousel:   "A swipeable carousel with creative direction, copy and an AI-generated cover image.",
+  instagram_reel:       "A short-form Reel — complete with script, hook copy and AI-generated video clip.",
+  email_newsletter:     "A branded email — strategy-led copy with a strong CTA and editorial polish.",
+  full_repurpose:       "Takes existing copy and repurposes it into formats for every platform.",
+  content_campaign:     "A full campaign strategy through to final copy — all 7 agents firing in sequence.",
+  social_video:         "A short social video — angle → hook → copy → AI video generation.",
+};
+
+// ── How It Works Panel ────────────────────────────────────────────────────────
+function HowItWorksPanel() {
+  const [openType, setOpenType] = useState<string | null>(null);
+
+  return (
+    <div className="space-y-5 animate-fade-up">
+
+      {/* Intro */}
+      <div className="rounded-xl p-5"
+        style={{ background: "var(--surface-raised)", border: "1px solid var(--border)" }}>
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+            style={{ background: "rgba(110,86,207,0.12)", border: "1px solid var(--border-bright)" }}>
+            <BookOpen size={17} style={{ color: "var(--accent-light)" }} />
+          </div>
+          <div>
+            <h2 className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>How the Pipeline Works</h2>
+            <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
+              Each output type runs a unique sequence of AI agents, each with a specialist role.
+            </p>
+          </div>
+        </div>
+        <p className="text-xs leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+          When you press Run, your brief and brand profile are passed through the agent chain in order. Each agent receives the previous agent&apos;s output as context, building toward fully polished, brand-native content.
+        </p>
+      </div>
+
+      {/* Output type breakdowns */}
+      <div className="rounded-xl overflow-hidden"
+        style={{ background: "var(--surface-raised)", border: "1px solid var(--border)" }}>
+        <div className="px-5 py-3" style={{ borderBottom: "1px solid var(--border)" }}>
+          <h3 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "var(--text-secondary)" }}>
+            Output Types &amp; Agent Sequences
+          </h3>
+        </div>
+
+        <div className="divide-y" style={{ borderColor: "var(--border)" }}>
+          {OUTPUT_TYPES.map((type) => {
+            const isOpen = openType === type.key;
+            return (
+              <div key={type.key}>
+                <button
+                  className="w-full px-5 py-4 text-left flex items-center justify-between gap-3 transition-colors"
+                  style={{ background: isOpen ? `${type.color}0a` : "transparent" }}
+                  onClick={() => setOpenType(isOpen ? null : type.key)}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="text-xl flex-shrink-0">{type.emoji}</span>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+                          {type.label}
+                        </span>
+                        <span className="text-xs font-mono px-2 py-0.5 rounded-full flex-shrink-0"
+                          style={{ background: `${type.color}18`, color: type.color }}>
+                          {type.agents.length} agents
+                        </span>
+                      </div>
+                      <p className="text-xs mt-0.5 truncate" style={{ color: "var(--text-muted)" }}>
+                        {OUTPUT_TYPE_DESCRIPTIONS[type.key] || ""}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex-shrink-0">
+                    {isOpen
+                      ? <ChevronUp size={14} style={{ color: "var(--text-muted)" }} />
+                      : <ChevronDown size={14} style={{ color: "var(--text-muted)" }} />}
+                  </div>
+                </button>
+
+                {isOpen && (
+                  <div className="px-5 pb-5 pt-1">
+                    {/* Agent flow */}
+                    <div className="flex flex-col gap-2">
+                      {type.agents.map((agentKey, idx) => {
+                        const info = AGENT_INFO[agentKey] || { emoji: "🤖", label: agentKey, role: "", color: "var(--accent)" };
+                        const isLast = idx === type.agents.length - 1;
+                        return (
+                          <div key={agentKey} className="flex gap-3 items-start">
+                            {/* Step number + connector */}
+                            <div className="flex flex-col items-center flex-shrink-0" style={{ width: 28 }}>
+                              <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
+                                style={{ background: `${info.color}20`, border: `1.5px solid ${info.color}60`, color: info.color }}>
+                                {idx + 1}
+                              </div>
+                              {!isLast && (
+                                <div className="w-px flex-1 mt-1" style={{ background: "var(--border)", minHeight: 12 }} />
+                              )}
+                            </div>
+                            {/* Card */}
+                            <div className="flex-1 rounded-xl px-4 py-3 mb-1"
+                              style={{ background: `${info.color}0c`, border: `1px solid ${info.color}30` }}>
+                              <div className="flex items-center gap-2 mb-0.5">
+                                <span className="text-base">{info.emoji}</span>
+                                <span className="text-xs font-semibold" style={{ color: info.color }}>
+                                  {info.label}
+                                </span>
+                              </div>
+                              <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
+                                {info.role}
+                              </p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Agent glossary */}
+      <div className="rounded-xl overflow-hidden"
+        style={{ background: "var(--surface-raised)", border: "1px solid var(--border)" }}>
+        <div className="px-5 py-3" style={{ borderBottom: "1px solid var(--border)" }}>
+          <h3 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "var(--text-secondary)" }}>
+            Agent Glossary
+          </h3>
+        </div>
+        <div className="divide-y" style={{ borderColor: "var(--border)" }}>
+          {Object.entries(AGENT_INFO).map(([key, info]) => (
+            <div key={key} className="flex items-start gap-3 px-5 py-3">
+              <span className="text-base flex-shrink-0 mt-0.5">{info.emoji}</span>
+              <div>
+                <span className="text-xs font-semibold" style={{ color: info.color }}>{info.label}</span>
+                <p className="text-xs mt-0.5" style={{ color: "var(--text-secondary)" }}>{info.role}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+    </div>
+  );
+}
+
 export default function PipelinePage() {
   const [clients, setClients] = useState<Client[]>([]);
   const [selectedClient, setSelectedClient] = useState<number | null>(null);
@@ -207,6 +374,7 @@ export default function PipelinePage() {
   const [finalOutput, setFinalOutput] = useState("");
   const [contentBriefId, setContentBriefId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"pipeline" | "how-it-works">("pipeline");
   const abortRef = useRef<(() => void) | null>(null);
   const { show, ToastEl } = useToast();
 
@@ -321,6 +489,34 @@ export default function PipelinePage() {
         subtitle="Select a client and output type, then press Run to generate fully branded content automatically."
       />
 
+
+      {/* ── Tab Bar ────────────────────────────────────────────────── */}
+      <div className="flex gap-1 mb-6 p-1 rounded-xl w-fit"
+        style={{ background: "var(--surface-raised)", border: "1px solid var(--border)" }}>
+        {([
+          { key: "pipeline",      label: "Run Pipeline",  icon: <Play size={13} /> },
+          { key: "how-it-works",  label: "How It Works",  icon: <BookOpen size={13} /> },
+        ] as const).map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => setActiveTab(tab.key)}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all"
+            style={activeTab === tab.key ? {
+              background: "var(--accent)",
+              color: "#fff",
+              boxShadow: "0 2px 8px rgba(110,86,207,0.3)",
+            } : {
+              background: "transparent",
+              color: "var(--text-muted)",
+            }}
+          >
+            {tab.icon}
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === "pipeline" && (
       <div className="grid grid-cols-1 xl:grid-cols-[400px_1fr] gap-6">
 
         {/* ── LEFT PANEL: Controls ─────────────────────────────────── */}
@@ -576,6 +772,9 @@ export default function PipelinePage() {
           )}
         </div>
       </div>
+      )}
+
+      {activeTab === "how-it-works" && <HowItWorksPanel />}
 
       {ToastEl}
     </div>
