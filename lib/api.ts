@@ -286,3 +286,71 @@ export const CAMPAIGN_STATUSES = ["draft", "active", "paused", "completed"] as c
 export const PLATFORMS = ["LinkedIn", "Twitter/X", "Instagram", "Facebook", "Blog", "Email", "YouTube", "TikTok", "Website"] as const;
 export const FUNNEL_STAGES = ["awareness", "consideration", "decision", "retention"] as const;
 export const CONTENT_TYPES = ["post", "article", "email", "video_script", "ad_copy", "landing_page", "thread", "newsletter"] as const;
+
+
+// ── Pipeline ──────────────────────────────────────────────────────────────────
+
+export const OUTPUT_TYPES = [
+  { key: "linkedin_post",      label: "LinkedIn Post",      agents: ["strategy","research","angle","hook","copywriter","cta","qa"],      color: "#0A66C2", emoji: "💼" },
+  { key: "twitter_thread",     label: "Twitter/X Thread",   agents: ["research","hook","copywriter","qa"],                               color: "#1DA1F2", emoji: "🐦" },
+  { key: "instagram_carousel", label: "Instagram Carousel", agents: ["angle","creative_direction","copywriter","cta","qa"],              color: "#E1306C", emoji: "📸" },
+  { key: "email_newsletter",   label: "Email Newsletter",   agents: ["strategy","copywriter","cta","qa"],                                color: "#F59E0B", emoji: "📧" },
+  { key: "full_repurpose",     label: "Full Repurpose",     agents: ["copywriter","repurpose","qa"],                                     color: "#8B5CF6", emoji: "♻️" },
+  { key: "content_campaign",   label: "Content Campaign",   agents: ["strategy","research","angle","hook","copywriter","cta","qa"],      color: "#10B981", emoji: "🚀" },
+] as const;
+
+export type OutputTypeKey = typeof OUTPUT_TYPES[number]["key"];
+
+export interface PipelineStageEvent {
+  type: "pipeline_start" | "stage_update" | "stage_chunk" | "pipeline_complete" | "pipeline_error";
+  stage?: string;
+  status?: "waiting" | "running" | "completed" | "failed";
+  stageIndex?: number;
+  totalStages?: number;
+  content?: string;
+  outputType?: string;
+  sequence?: string[];
+  clientId?: number;
+  contentBriefId?: number;
+  output?: string;
+  error?: string;
+}
+
+export function runPipelineStream(
+  payload: { clientId: number; outputType: string; brief?: string },
+  onEvent: (event: PipelineStageEvent) => void,
+  onDone: (contentBriefId: number, finalOutput: string) => void,
+  onError: (msg: string) => void
+): () => void {
+  const BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+  const controller = new AbortController();
+
+  fetch(`${BASE}/api/pipeline/run`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+    signal: controller.signal,
+  }).then(async (res) => {
+    const reader = res.body?.getReader();
+    const decoder = new TextDecoder();
+    if (!reader) return;
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const text = decoder.decode(value);
+      const lines = text.split("\n").filter((l) => l.startsWith("data: "));
+      for (const line of lines) {
+        try {
+          const event: PipelineStageEvent = JSON.parse(line.slice(6));
+          onEvent(event);
+          if (event.type === "pipeline_complete") onDone(event.contentBriefId!, event.output || "");
+          if (event.type === "pipeline_error") onError(event.error || "Pipeline failed");
+        } catch {}
+      }
+    }
+  }).catch((err) => {
+    if (err.name !== "AbortError") onError(err.message);
+  });
+
+  return () => controller.abort();
+}
