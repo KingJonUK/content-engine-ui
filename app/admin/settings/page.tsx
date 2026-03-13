@@ -16,6 +16,19 @@ import {
 import { Button, Modal, FormField, Select, ConfirmModal, Badge, useToast } from "@/components/ui";
 import { Settings, Plus, Pencil, Trash2, Zap, Bot, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 
+
+const AGENT_LABELS: Record<string, { label: string; emoji: string; description: string }> = {
+  strategy:           { emoji: "🧠", label: "Strategy",           description: "Content strategy & positioning" },
+  research:           { emoji: "🔍", label: "Research",           description: "Topic research & insights" },
+  angle:              { emoji: "🎯", label: "Angle",              description: "Content angle & hook direction" },
+  hook:               { emoji: "⚡", label: "Hook Writer",        description: "Opening hooks & attention grabbers" },
+  copywriter:         { emoji: "✍️",  label: "Copywriter",        description: "Core content writing" },
+  cta:                { emoji: "📣", label: "CTA Writer",         description: "Calls to action" },
+  qa:                 { emoji: "✅", label: "QA / Editor",        description: "Quality assurance & editing" },
+  creative_direction: { emoji: "🎨", label: "Creative Direction", description: "Visual & carousel structure" },
+  repurpose:          { emoji: "♻️",  label: "Repurposer",        description: "Repurpose content across formats" },
+};
+
 const EMPTY_PROVIDER = { name: "", providerType: "openai", apiKey: "", baseUrl: "", defaultModel: "" };
 
 export default function SettingsPage() {
@@ -208,13 +221,19 @@ export default function SettingsPage() {
                 className="flex items-center gap-4 p-3 rounded-xl"
                 style={{ background: "var(--surface-raised)", border: "1px solid var(--border)" }}
               >
-                <div className="w-44 flex-shrink-0">
-                  <p className="text-xs font-mono" style={{ color: "var(--text-secondary)" }}>
-                    {a.replace(/_/g, " ")}
+                <div className="w-56 flex-shrink-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">{AGENT_LABELS[a]?.emoji ?? "🤖"}</span>
+                    <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
+                      {AGENT_LABELS[a]?.label ?? a.replace(/_/g, " ")}
+                    </p>
+                  </div>
+                  <p className="text-xs mt-0.5 ml-7" style={{ color: "var(--text-muted)" }}>
+                    {AGENT_LABELS[a]?.description ?? ""}
                   </p>
                   {existing && (
-                    <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
-                      {existing.providerName} / {existing.model}
+                    <p className="text-xs mt-0.5 ml-7" style={{ color: "var(--accent-light)" }}>
+                      {existing.providerName} · {existing.model}
                     </p>
                   )}
                 </div>
