@@ -11,7 +11,7 @@ import {
 import { Button, FormField, PageHeader, Select, useToast } from "@/components/ui";
 import {
   Play, Square, Copy, Check, ChevronDown, ChevronUp,
-  Workflow, Loader2, CheckCircle2, XCircle, Clock,
+  GitBranch, Loader2, CheckCircle2, XCircle, Clock,
   Zap, FileText, RotateCcw, Info,
 } from "lucide-react";
 
@@ -485,7 +485,7 @@ export default function PipelinePage() {
               style={{ background: "var(--surface-raised)", border: "1px solid var(--border)" }}>
               <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4"
                 style={{ background: "rgba(110,86,207,0.1)", border: "1px solid var(--border-bright)" }}>
-                <Workflow size={28} style={{ color: "var(--accent-light)" }} />
+                <GitBranch size={28} style={{ color: "var(--accent-light)" }} />
               </div>
               <p className="text-base font-semibold mb-1" style={{ color: "var(--text-primary)" }}>
                 Ready to run
