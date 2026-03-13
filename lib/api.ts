@@ -299,55 +299,15 @@ export const CONTENT_TYPES = ["post", "article", "email", "video_script", "ad_co
 // ── Pipeline ──────────────────────────────────────────────────────────────────
 
 export const OUTPUT_TYPES = [
-  { key: "linkedin_post",      label: "LinkedIn Post",      agents: ["strategy","research","angle","hook","copywriter","cta","qa"],      color: "#0A66C2", emoji: "💼" },
-  { key: "twitter_thread",     label: "Twitter/X Thread",   agents: ["research","hook","copywriter","qa"],                               color: "#1DA1F2", emoji: "🐦" },
-  { key: "instagram_carousel", label: "Instagram Carousel", agents: ["angle","creative_direction","copywriter","cta","qa"],              color: "#E1306C", emoji: "📸" },
-  { key: "email_newsletter",   label: "Email Newsletter",   agents: ["strategy","copywriter","cta","qa"],                                color: "#F59E0B", emoji: "📧" },
-  { key: "full_repurpose",     label: "Full Repurpose",     agents: ["copywriter","repurpose","qa"],                                     color: "#8B5CF6", emoji: "♻️" },
-  { key: "content_campaign",   label: "Content Campaign",   agents: ["strategy","research","angle","hook","copywriter","cta","qa"],      color: "#10B981", emoji: "🚀" },
-] as const;
-
-export type OutputTypeKey = typeof OUTPUT_TYPES[number]["key"];
-
-export interface PipelineStageEvent {
-  type: "pipeline_start" | "stage_update" | "stage_chunk" | "pipeline_complete" | "pipeline_error";
-  stage?: string;
-  status?: "waiting" | "running" | "completed" | "failed";
-  stageIndex?: number;
-  totalStages?: number;
-  content?: string;
-  outputType?: string;
-  sequence?: string[];
-  clientId?: number;
-  contentBriefId?: number;
-  output?: string;
-  error?: string;
-}
-
-
-// ─── Media Providers ─────────────────────────────────────────────────────────
-export type MediaType = "image" | "video";
-export type ImageProviderType = "openai" | "replicate" | "stability" | "openrouter";
-export type VideoProviderType = "runway" | "kling" | "luma" | "openai" | "openrouter";
-
-export interface MediaProvider {
-  id: number;
-  name: string;
-  mediaType: MediaType;
-  providerType: string;
-  apiKey: string;
-  baseUrl?: string;
-  defaultModel: string;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export const IMAGE_PROVIDERS: { value: ImageProviderType; label: string; defaultModel: string; baseUrl?: string }[] = [
-  { value: "openai",     label: "OpenAI DALL-E",              defaultModel: "dall-e-3" },
-  { value: "replicate",  label: "Replicate (Flux)",           defaultModel: "black-forest-labs/flux-1.1-pro" },
-  { value: "stability",  label: "Stability AI",               defaultModel: "stable-image-core" },
-  { value: "openrouter", label: "OpenRouter (Ideogram/Recraft)", defaultModel: "ideogram-ai/ideogram-v2" },
+  { key: "linkedin_post",        label: "LinkedIn Post",          agents: ["strategy","research","angle","hook","copywriter","cta","qa"],                           color: "#0A66C2", emoji: "💼" },
+  { key: "linkedin_post_visual", label: "LinkedIn Post + Image",  agents: ["strategy","research","angle","hook","copywriter","cta","qa","image_generation"],       color: "#0A66C2", emoji: "🖼️" },
+  { key: "twitter_thread",       label: "Twitter/X Thread",       agents: ["research","hook","copywriter","qa"],                                                   color: "#1DA1F2", emoji: "🐦" },
+  { key: "instagram_carousel",   label: "Instagram Carousel",     agents: ["angle","creative_direction","copywriter","cta","qa","image_generation"],               color: "#E1306C", emoji: "📸" },
+  { key: "instagram_reel",       label: "Instagram Reel",         agents: ["angle","hook","copywriter","cta","video_generation"],                                  color: "#E1306C", emoji: "🎬" },
+  { key: "email_newsletter",     label: "Email Newsletter",       agents: ["strategy","copywriter","cta","qa"],                                                    color: "#F59E0B", emoji: "📧" },
+  { key: "full_repurpose",       label: "Full Repurpose",         agents: ["copywriter","repurpose","qa"],                                                         color: "#8B5CF6", emoji: "♻️" },
+  { key: "content_campaign",     label: "Content Campaign",       agents: ["strategy","research","angle","hook","copywriter","cta","qa"],                          color: "#10B981", emoji: "🚀" },
+  { key: "social_video",         label: "Social Video",           agents: ["angle","hook","copywriter","video_generation"],                                        color: "#EF4444", emoji: "🎥" },
 ];
 
 export const VIDEO_PROVIDERS: { value: VideoProviderType; label: string; defaultModel: string }[] = [
