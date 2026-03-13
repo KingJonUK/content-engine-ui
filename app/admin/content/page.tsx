@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import {
   getClients,
+  OUTPUT_TYPES,
   getContent,
   createContent,
   updateContent,
@@ -33,6 +34,10 @@ const EMPTY_FORM = {
   notes: "",
   campaignId: "",
 };
+
+
+// Map outputType key → human label (e.g. "linkedin_post" → "LinkedIn Post")
+const OUTPUT_TYPE_LABEL = Object.fromEntries(OUTPUT_TYPES.map((t) => [t.key, `${t.emoji} ${t.label}`]));
 
 export default function ContentPage() {
   const [clients, setClients] = useState<Client[]>([]);
@@ -233,7 +238,7 @@ export default function ContentPage() {
                   <div className="flex-1 min-w-0 mr-4">
                     <p className="font-medium text-sm" style={{ color: "var(--text-primary)" }}>{item.title}</p>
                     <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
-                      {item.platform} · {item.contentType} · {item.funnelStage}
+                      {OUTPUT_TYPE_LABEL[item.contentType] ?? item.platform} · {item.funnelStage || item.status}
                     </p>
                   </div>
                   <div className="flex items-center gap-3 flex-shrink-0">
